@@ -5,7 +5,7 @@ dt = 0.01;                % time step [s]
 T_final = 30;             % total simulation time [s]
 enable_collision    = true;
 enable_perturbation = true;
-enable_obs_noise    = true;
+enable_obs_noise    = false;
 enable_animation    = true; % live animation
 target_theta = deg2rad(0);  % target [rad]
 
@@ -103,9 +103,10 @@ for k = 1:steps
     t = k*dt;
     
     % ---------------- PID CONTROL ----------------
-    obs_noise = enable_obs_noise * sqrt(deg2rad(0.0)) * randn;
+    obs_noise = enable_obs_noise * sqrt(deg2rad(0.001)) * randn;
     error = target_theta - (state(1)+obs_noise);
     [u, pid] = pid.computeControl(error, dt);
+    u = clip(u, 0, 3.2);
     
     % ---------------- DYNAMICS INTEGRATION ----------------
     state = state + dt*dynamics(state,u);
@@ -115,7 +116,7 @@ for k = 1:steps
         % Start a new perturbation if timer expired
         if perturb_timer <= 0 && rand < 0.01  % chance to start
             perturb_timer = randi([10,100]);    % duration in steps (0.1–1.0 s)
-            perturb_strength = randn*0.05;      % force magnitude
+            perturb_strength = randn*0.1;      % force magnitude
         end
         if perturb_timer > 0
             state = state + dt*[0; L*perturb_strength/I_total];
